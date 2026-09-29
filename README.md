@@ -4,15 +4,10 @@ This repo holds the case study app used in **PROG2007, Lecture 8 — Intro to De
 
 The lecture slides reference this exact code (down to file and line), including a real, runnable JUnit test file. This README covers **everything** needed to get it running and testing green, including the one file this repo does *not* include.
 
-## `app/build.gradle.kts` is not in this repo
-
-That file isn't committed here. You need to create it yourself, once, when you first set the project up — full content is given below in [Setup](#setup), step 3. Nothing else needs it recreated; the app source and the test file are both in the repo as normal.
-
 ## What's in here
 
 - `app/` — the Android app (`com.example.lect8testdebug`), currently as a single `MainActivity.kt` — this is intentional; splitting it into `ui/`, `viewmodel/`, `model/` packages is the accompanying lab exercise, not something already done for you.
 - `app/src/test/.../AccidentReportTest.kt` — the local JUnit test behind the lecture's Unit Testing slides. Real, unmodified, and expected to go 6/6 green.
-- **Not included:** `app/build.gradle.kts` — see above and step 3 below.
 
 ## Prerequisites
 
@@ -26,7 +21,7 @@ That file isn't committed here. You need to create it yourself, once, when you f
 1. **Clone and open** the project in Android Studio.
 2. **Set the Gradle JDK to 21**, *before* your first sync:
    File → Settings (Android Studio → Settings on macOS) → Build, Execution, Deployment → Build Tools → Gradle → **Gradle JDK** → pick a JDK 21 entry, or use "Download JDK…" right there if you don't have one installed. This is required — see [Known gotchas](#known-gotchas).
-3. **Create `app/build.gradle.kts`** with exactly this content (this file is not in the repo — see above):
+3. **Create `app/build.gradle.kts`** with exactly this content:
 
    ```kotlin
    plugins {
