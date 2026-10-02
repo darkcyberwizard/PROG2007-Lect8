@@ -77,6 +77,8 @@ import java.util.Locale
 import java.util.concurrent.Executors
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 
 // Fallback map center used until a real fix comes in: NTNU Trondheim campus.
 private const val DEFAULT_LAT = 63.4181
@@ -373,7 +375,12 @@ fun AccidentReporterScreen(
                 Text("Grant Camera Permission")
             }
         }
-        Text("Photo: ${photoUri ?: "not attached"}", style = MaterialTheme.typography.bodySmall)
+        Text(
+            "Photo: ${photoUri ?: "not attached"}",
+            style = MaterialTheme.typography.bodySmall,
+            color = Color.White,
+            fontWeight = FontWeight.Bold
+        )
 
         // --- Location + Map ---
         Button(onClick = {
@@ -384,7 +391,8 @@ fun AccidentReporterScreen(
         }
         Text(
             "Location: ${location?.let { "${it.latitude}, ${it.longitude}" } ?: "not set"}",
-            style = MaterialTheme.typography.bodySmall
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold
         )
 
         GoogleMap(
@@ -402,7 +410,8 @@ fun AccidentReporterScreen(
         }
         Text(
             "Tip: on the emulator, set a location under Extended Controls \u2192 Location first.",
-            style = MaterialTheme.typography.bodySmall
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.Bold
         )
 
         // --- Submit ---
