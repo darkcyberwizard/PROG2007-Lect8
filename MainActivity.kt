@@ -1,6 +1,7 @@
 package com.example.lect8testdebug
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Application
 import android.content.ContentValues
 import android.content.Context
@@ -64,7 +65,7 @@ import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberMarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -154,6 +155,11 @@ interface LocationProvider {
     suspend fun getCurrentLocation(): Location?
 }
 
+// Lint flags the call below because it can't see that fetchLocation() already
+// checked ACCESS_FINE_LOCATION several calls away, before this coroutine chain
+// ever starts. The real runtime safety net is the SecurityException catch in
+// RealLocationProvider.getCurrentLocation(), one level up from here.
+@SuppressLint("MissingPermission")
 private suspend fun FusedLocationProviderClient.awaitCurrentLocation(priority: Int): Location? =
     suspendCancellableCoroutine { cont ->
         val cts = CancellationTokenSource()
@@ -333,10 +339,12 @@ fun AccidentReporterScreen(
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(LatLng(DEFAULT_LAT, DEFAULT_LNG), 12f)
     }
+    val markerState = rememberMarkerState()
 
     LaunchedEffect(location) {
         location?.let {
             cameraPositionState.position = CameraPosition.fromLatLngZoom(LatLng(it.latitude, it.longitude), 16f)
+            markerState.position = LatLng(it.latitude, it.longitude)
         }
     }
 
@@ -387,7 +395,7 @@ fun AccidentReporterScreen(
         ) {
             location?.let {
                 Marker(
-                    state = MarkerState(position = LatLng(it.latitude, it.longitude)),
+                    state = markerState,
                     title = "Accident location"
                 )
             }
