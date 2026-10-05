@@ -84,6 +84,13 @@ import androidx.compose.ui.text.font.FontWeight
 private const val DEFAULT_LAT = 63.4181
 private const val DEFAULT_LNG = 10.4025
 
+/**
+ * Checks whether the app currently holds a runtime permission.
+ *
+ * @param context any [Context], used to look up the permission state
+ * @param permission the permission constant, e.g. [Manifest.permission.CAMERA]
+ * @return true if the permission has been granted, false otherwise
+ */
 fun hasPermission(context: Context, permission: String): Boolean =
     ContextCompat.checkSelfPermission(context, permission) == PackageManager.PERMISSION_GRANTED
 
@@ -143,6 +150,9 @@ data class AccidentReport(
  * Pure validation logic — no Compose, no Android framework, no ViewModel.
  * This is what we unit-test directly (AAA pattern, positive/negative/boundary
  * cases) once it's pulled into its own file in the lab.
+ *
+ * @param report the report to validate
+ * @return true if both a location and a photo are attached, false otherwise
  */
 fun isReportValid(report: AccidentReport): Boolean {
     return report.location != null && report.photoUri != null
@@ -154,6 +164,12 @@ fun isReportValid(report: AccidentReport): Boolean {
  * a fake without touching real GPS/location services.
  */
 interface LocationProvider {
+    /**
+     * Asks the location provider for the device's current position.
+     *
+     * @return the current [Location], or null if no fix could be obtained
+     * (for example if the permission is missing or the lookup fails)
+     */
     suspend fun getCurrentLocation(): Location?
 }
 
@@ -218,6 +234,12 @@ class AccidentViewModel(application: Application) : AndroidViewModel(application
     val demoLocationRevoked: StateFlow<Boolean> = _demoLocationRevoked.asStateFlow()
     fun setDemoLocationRevoked(value: Boolean) { _demoLocationRevoked.value = value }
 
+    /**
+     * Binds the camera preview and photo capture to the given lifecycle.
+     *
+     * @param lifecycleOwner the owner whose lifecycle controls when the camera runs
+     * @param previewView the view that displays the live preview
+     */
     fun bindCamera(lifecycleOwner: LifecycleOwner, previewView: PreviewView) {
         val context = getApplication<Application>()
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
@@ -278,12 +300,11 @@ class AccidentViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * LIVE DEMO TARGET.
+     * Fetches the device's current location and publishes it through [location].
      *
-     * Set a breakpoint on the fun fetchLocation()  Then tap Submit
-     * before fetching a location to reproduce a real NullPointerException and
-     * practice reading it straight from Logcat / the stack trace — this
-     * function has no null check yet, on purpose.
+     * Does nothing except log a warning and update [statusMessage] if the
+     * location permission has not been granted. If the lookup finishes without a
+     * fix, [location] is set to null and [statusMessage] says so.
      */
     fun fetchLocation() { //Add breakpoint here
         val context = getApplication<Application>()
