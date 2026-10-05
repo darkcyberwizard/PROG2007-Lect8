@@ -262,7 +262,15 @@ class AccidentViewModel(application: Application) : AndroidViewModel(application
         )
     }
 
-    fun fetchLocation() {
+    /**
+     * LIVE DEMO TARGET.
+     *
+     * Set a breakpoint on the fun fetchLocation()  Then tap Submit
+     * before fetching a location to reproduce a real NullPointerException and
+     * practice reading it straight from Logcat / the stack trace — this
+     * function has no null check yet, on purpose.
+     */
+    fun fetchLocation() { //Add breakpoint here
         val context = getApplication<Application>()
         if (!hasPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)) {
             Log.w(TAG, "location permission not granted")
@@ -281,20 +289,12 @@ class AccidentViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    /**
-     * LIVE DEMO TARGET.
-     *
-     * Set a breakpoint on the `val latitude = ...` line below and step through:
-     * is `_location.value` null? is `_photoUri.value` set? Then tap Submit
-     * before fetching a location to reproduce a real NullPointerException and
-     * practice reading it straight from Logcat / the stack trace — this
-     * function has no null check yet, on purpose.
-     */
+
     fun submitReport() {
         val report = AccidentReport(location = _location.value, photoUri = _photoUri.value)
         Log.d(TAG, "submitReport() called with report=$report")
 
-        val latitude = report.location!!.latitude // <- breakpoint here; crashes if location is null
+        val latitude = report.location!!.latitude
 
         _statusMessage.value = "Report submitted at lat=$latitude"
         Log.d(TAG, "report submitted successfully")
