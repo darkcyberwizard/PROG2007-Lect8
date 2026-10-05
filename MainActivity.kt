@@ -209,6 +209,15 @@ class AccidentViewModel(application: Application) : AndroidViewModel(application
     private val _statusMessage = MutableStateFlow("No report submitted yet")
     val statusMessage: StateFlow<String> = _statusMessage.asStateFlow()
 
+    // DEMO ONLY: pretend permissions were revoked, so the Log.w / Log.e paths can be shown live.
+    private val _demoCameraRevoked = MutableStateFlow(false)
+    val demoCameraRevoked: StateFlow<Boolean> = _demoCameraRevoked.asStateFlow()
+    fun setDemoCameraRevoked(value: Boolean) { _demoCameraRevoked.value = value }
+
+    private val _demoLocationRevoked = MutableStateFlow(false)
+    val demoLocationRevoked: StateFlow<Boolean> = _demoLocationRevoked.asStateFlow()
+    fun setDemoLocationRevoked(value: Boolean) { _demoLocationRevoked.value = value }
+
     fun bindCamera(lifecycleOwner: LifecycleOwner, previewView: PreviewView) {
         val context = getApplication<Application>()
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
@@ -232,6 +241,12 @@ class AccidentViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun takePhoto() {
+        if (_demoCameraRevoked.value) {
+            val e = SecurityException("Camera permission revoked (demo)")
+            Log.e(TAG, "photo capture failed", e)
+            _statusMessage.value = "Photo capture failed: ${e.message}"
+            return
+        }
         val capture = imageCapture ?: return
         val context = getApplication<Application>()
         val name = SimpleDateFormat("yyyy-MM-dd-HH-mm-ss", Locale.US)
@@ -272,7 +287,7 @@ class AccidentViewModel(application: Application) : AndroidViewModel(application
      */
     fun fetchLocation() { //Add breakpoint here
         val context = getApplication<Application>()
-        if (!hasPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)) {
+        if (_demoLocationRevoked.value || !hasPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)) {
             Log.w(TAG, "location permission not granted")
             _statusMessage.value = "Location permission not granted"
             return
@@ -321,6 +336,8 @@ fun AccidentReporterScreen(
     val photoUri by viewModel.photoUri.collectAsState()
     val location by viewModel.location.collectAsState()
     val statusMessage by viewModel.statusMessage.collectAsState()
+    val demoCameraRevoked by viewModel.demoCameraRevoked.collectAsState()
+    val demoLocationRevoked by viewModel.demoLocationRevoked.collectAsState()
 
     var hasCameraPermission by remember { mutableStateOf(hasPermission(context, Manifest.permission.CAMERA)) }
     var hasLocationPermission by remember {
@@ -370,6 +387,9 @@ fun AccidentReporterScreen(
                 modifier = Modifier.fillMaxWidth().height(220.dp)
             )
             Button(onClick = { viewModel.takePhoto() }) { Text("Take Photo") }
+            Button(onClick = { viewModel.setDemoCameraRevoked(!demoCameraRevoked) }) {
+                Text(if (demoCameraRevoked) "Demo: restore camera permission" else "Demo: revoke camera permission")
+            }
         } else {
             Button(onClick = { cameraPermissionLauncher.launch(Manifest.permission.CAMERA) }) {
                 Text("Grant Camera Permission")
@@ -388,6 +408,9 @@ fun AccidentReporterScreen(
             else locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }) {
             Text("Get Current Location")
+        }
+        Button(onClick = { viewModel.setDemoLocationRevoked(!demoLocationRevoked) }) {
+            Text(if (demoLocationRevoked) "Demo: restore location permission" else "Demo: revoke location permission")
         }
         Text(
             "Location: ${location?.let { "${it.latitude}, ${it.longitude}" } ?: "not set"}",
